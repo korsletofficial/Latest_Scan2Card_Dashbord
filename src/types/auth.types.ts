@@ -1,0 +1,27 @@
+export interface User {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phoneNumber?: string;
+  role: 'SUPERADMIN' | 'EXHIBITOR' | 'TEAMMANAGER' | 'ENDUSER';
+  companyName?: string;
+  isActive?: boolean;
+}
+
+export interface AuthResponse {
+  success: boolean;
+  message: string;
+  data: {
+    token: string;
+    user: User;
+    requires2FA?: boolean;
+    userId?: string;
+    email?: string;
+  };
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}

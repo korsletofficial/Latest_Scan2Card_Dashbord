@@ -1,0 +1,100 @@
+import axiosInstance from './axios.config';
+
+export interface TeamMemberStats {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber?: string;
+  isActive: boolean;
+  leadCount: number;
+  joinedAt: string;
+}
+
+export interface DashboardStats {
+  totalMembers: number;
+  totalLeads: number;
+  totalLicenseKeys: number;
+  licenseKeys: Array<{
+    key: string;
+    email: string;
+    stallName?: string;
+    expiresAt: string;
+    usedCount: number;
+    maxActivations: number;
+  }>;
+}
+
+export interface LeadsGraphData {
+  period: 'hourly' | 'daily';
+  eventName: string;
+  startDate: string;
+  endDate: string;
+  graphData: Array<{
+    label: string;
+    count: number;
+  }>;
+}
+
+export interface TeamManagerEvent {
+  _id: string;
+  eventName: string;
+  description?: string;
+  type: 'Offline' | 'Online' | 'Hybrid';
+  startDate: string;
+  endDate: string;
+  location?: {
+    venue?: string;
+    address?: string;
+    city?: string;
+  };
+  exhibitor: {
+    firstName: string;
+    lastName: string;
+    companyName?: string;
+  };
+  myLicenseKeys: Array<{
+    key: string;
+    stallName?: string;
+    expiresAt: string;
+    usedCount: number;
+    maxActivations: number;
+  }>;
+}
+
+const teamManagerAPI = {
+    // Get leads for a specific team member (filtered to events managed by this team manager)
+    getMemberLeads: async (memberId: string) => {
+      const response = await axiosInstance.get<{ success: boolean; data: any[] }>(`/team-manager/team/member/${memberId}/leads`);
+      return response.data.data;
+    },
+  // Get dashboard stats
+  getDashboardStats: async () => {
+    const response = await axiosInstance.get<{ success: boolean; data: DashboardStats }>('/team-manager/dashboard/stats');
+    return response.data.data;
+  },
+
+  // Get leads graph data
+  getLeadsGraph: async (eventId: string, period: 'hourly' | 'daily' = 'hourly') => {
+    const response = await axiosInstance.get<{ success: boolean; data: LeadsGraphData }>('/team-manager/leads/graph', {
+      params: { eventId, period },
+    });
+    return response.data.data;
+  },
+
+  // Get team members with lead count
+  getTeamMembers: async (page = 1, limit = 10, search = '') => {
+    const response = await axiosInstance.get('/team-manager/team/members', {
+      params: { page, limit, search },
+    });
+    return response.data.data;
+  },
+
+  // Get my events
+  getMyEvents: async () => {
+    const response = await axiosInstance.get<{ success: boolean; data: TeamManagerEvent[] }>('/team-manager/events');
+    return response.data.data;
+  },
+};
+
+export default teamManagerAPI;
