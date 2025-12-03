@@ -75,6 +75,7 @@ export interface GetLeadsParams {
   isIndependentLead?: boolean;
   rating?: number;
   search?: string;
+  minimal?: boolean;
 }
 
 export interface ScanCardResponse {
