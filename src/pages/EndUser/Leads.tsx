@@ -220,16 +220,12 @@ const EndUserLeads = () => {
         const updatedFormData = {
           ...formData,
           ocrText: response.data.rawData || qrText,
+          entryCode: response.data.entryCode || '', // Always populate entryCode from response
           details: {
             ...formData.details,
             ...response.data.details,
           },
         };
-
-        // If QR scan returns only a code (no structured data), populate entryCode
-        if (response.type === 'entry_code' || (!response.data.details || Object.keys(response.data.details).length === 0)) {
-          updatedFormData.entryCode = response.data.entryCode || qrText;
-        }
 
         setFormData(updatedFormData);
         setConfidence(response.data.confidence || 1.0);
@@ -833,8 +829,7 @@ const EndUserLeads = () => {
                 {showCreateModal && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Event (Optional)
-                      <span className="text-xs text-gray-500 ml-2">Leave empty for independent lead</span>
+                      Event <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={formData.eventId || ''}
@@ -843,9 +838,10 @@ const EndUserLeads = () => {
                         eventId: e.target.value || undefined,
                         isIndependentLead: !e.target.value
                       })}
+                      required
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9929EA] focus:border-transparent"
                     >
-                      <option value="">Independent Lead</option>
+                      <option value="">Select an event</option>
                       {availableEvents.map((rsvp) => (
                         <option key={rsvp._id} value={rsvp.eventId._id}>
                           {rsvp.eventId.eventName} - {rsvp.eventId.type}
@@ -909,23 +905,6 @@ const EndUserLeads = () => {
                       />
                       <p className="text-xs text-gray-500 mt-1">
                         This field is automatically filled when you scan a QR code that contains only an entry code
-                      </p>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Card Image URL {formData.scannedCardImage && <span className="text-green-600">(Auto-filled from scan - editable)</span>}
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.scannedCardImage}
-                        onChange={(e) => setFormData({ ...formData, scannedCardImage: e.target.value })}
-                        required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9929EA] focus:border-transparent"
-                        placeholder="Scan a card above or enter image URL"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        This field is automatically filled when you scan a business card, but you can manually edit it
                       </p>
                     </div>
                   </>
