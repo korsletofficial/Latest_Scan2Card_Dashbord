@@ -1,8 +1,9 @@
 import axios, { AxiosError } from 'axios';
 import type { InternalAxiosRequestConfig } from 'axios';
 import { getToken, getRefreshToken, setToken, logout } from '../utils/auth';
+import { API_BASE_URL } from '../config/config';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_URL = API_BASE_URL;
 
 // Create axios instance
 export const apiClient = axios.create({
