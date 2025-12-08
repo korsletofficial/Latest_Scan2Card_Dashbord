@@ -62,6 +62,27 @@ export interface TeamManagerEvent {
   }>;
 }
 
+export interface LicenseKey {
+  key: string;
+  email: string;
+  stallName?: string;
+  expiresAt: string;
+  usedCount: number;
+  maxActivations: number;
+  eventId: string;
+  eventName: string;
+}
+
+export interface LicenseKeysResponse {
+  licenseKeys: LicenseKey[];
+  pagination: {
+    total: number;
+    page: number;
+    pages: number;
+    limit: number;
+  };
+}
+
 const teamManagerAPI = {
     // Get leads for a specific team member (filtered to events managed by this team manager)
     getMemberLeads: async (memberId: string) => {
@@ -93,6 +114,14 @@ const teamManagerAPI = {
   // Get my events
   getMyEvents: async () => {
     const response = await axiosInstance.get<{ success: boolean; data: TeamManagerEvent[] }>('/team-manager/events');
+    return response.data.data;
+  },
+
+  // Get all license keys with pagination
+  getAllLicenseKeys: async (page = 1, limit = 10, search = '') => {
+    const response = await axiosInstance.get<{ success: boolean; data: LicenseKeysResponse }>('/team-manager/license-keys', {
+      params: { page, limit, search },
+    });
     return response.data.data;
   },
 };

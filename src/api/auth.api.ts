@@ -1,5 +1,8 @@
 import { apiClient } from './axios.config';
-import type { LoginCredentials, AuthResponse } from '../types/auth.types';
+import type { LoginCredentials, AuthResponse, RefreshTokenResponse } from '../types/auth.types';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 export const authAPI = {
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
@@ -21,6 +24,19 @@ export const authAPI = {
     } catch (error: any) {
       if (error.response?.data) {
         throw new Error(error.response.data.message || 'OTP verification failed');
+      }
+      throw error;
+    }
+  },
+
+  refreshToken: async (refreshToken: string): Promise<RefreshTokenResponse> => {
+    try {
+      // Use axios directly without interceptor to avoid infinite loop
+      const response = await axios.post(`${API_URL}/auth/refresh-token`, { refreshToken });
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw new Error(error.response.data.message || 'Token refresh failed');
       }
       throw error;
     }

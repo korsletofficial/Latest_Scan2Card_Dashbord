@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../api/auth.api';
-import { setToken, setUser } from '../utils/auth';
+import { setToken, setUser, setRefreshToken } from '../utils/auth';
 import { Button } from '@/components/ui/button';
 
 const Login = () => {
@@ -33,6 +33,9 @@ const Login = () => {
 
       // Normal login flow (2FA disabled)
       setToken(response.data.token);
+      if (response.data.refreshToken) {
+        setRefreshToken(response.data.refreshToken);
+      }
       setUser(response.data.user);
 
       // Redirect based on role

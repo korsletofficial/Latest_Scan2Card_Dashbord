@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import teamManagerAPI, { type DashboardStats, type LeadsGraphData, type TeamManagerEvent } from '../../api/teamManager.api';
@@ -6,6 +7,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Button } from '@/components/ui/button';
 
 const TeamManagerDashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [events, setEvents] = useState<TeamManagerEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<string>('');
@@ -195,7 +197,18 @@ const TeamManagerDashboard = () => {
         {stats && stats.licenseKeys.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>My License Keys</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Recent License Keys</CardTitle>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/manager/license-keys')}
+                  className="text-[#854AE6] hover:text-[#6F33C5] hover:bg-[#F2E9FF]"
+                >
+                  View All ({stats.totalLicenseKeys})
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -222,6 +235,16 @@ const TeamManagerDashboard = () => {
                   </div>
                 ))}
               </div>
+              {stats.totalLicenseKeys > 5 && (
+                <div className="mt-4 text-center">
+                  <button
+                    onClick={() => navigate('/manager/license-keys')}
+                    className="text-sm text-[#854AE6] hover:text-[#6F33C5] font-medium"
+                  >
+                    View all {stats.totalLicenseKeys} license keys →
+                  </button>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}

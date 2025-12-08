@@ -12,6 +12,18 @@ export const removeToken = (): void => {
   localStorage.removeItem('token');
 };
 
+export const getRefreshToken = (): string | null => {
+  return localStorage.getItem('refreshToken');
+};
+
+export const setRefreshToken = (refreshToken: string): void => {
+  localStorage.setItem('refreshToken', refreshToken);
+};
+
+export const removeRefreshToken = (): void => {
+  localStorage.removeItem('refreshToken');
+};
+
 export const getUser = (): User | null => {
   const userStr = localStorage.getItem('user');
   return userStr ? JSON.parse(userStr) : null;
@@ -27,6 +39,7 @@ export const removeUser = (): void => {
 
 export const logout = (): void => {
   removeToken();
+  removeRefreshToken();
   removeUser();
 };
 

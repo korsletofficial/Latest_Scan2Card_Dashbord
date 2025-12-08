@@ -15,6 +15,7 @@ import TeamManagerDashboard from './pages/TeamManager/Dashboard';
 import TeamManagerTeam from './pages/TeamManager/Team';
 import TeamManagerLeadsPage from './pages/TeamManager/LeadsPage';
 import TeamManagerMeetings from './pages/TeamManager/Meetings';
+import TeamManagerLicenseKeys from './pages/TeamManager/LicenseKeys';
 import EndUserDashboard from './pages/EndUser/Dashboard';
 import EndUserLeads from './pages/EndUser/Leads';
 import EndUserEvents from './pages/EndUser/Events';
@@ -136,6 +137,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['TEAMMANAGER']}>
               <TeamManagerMeetings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/license-keys"
+          element={
+            <ProtectedRoute allowedRoles={['TEAMMANAGER']}>
+              <TeamManagerLicenseKeys />
             </ProtectedRoute>
           }
         />

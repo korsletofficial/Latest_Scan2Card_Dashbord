@@ -14,10 +14,22 @@ export interface AuthResponse {
   message: string;
   data: {
     token: string;
+    refreshToken?: string;
+    expiresIn?: string;
     user: User;
     requires2FA?: boolean;
     userId?: string;
     email?: string;
+  };
+}
+
+export interface RefreshTokenResponse {
+  success: boolean;
+  message: string;
+  data: {
+    token: string;
+    expiresIn: string;
+    user: User;
   };
 }
 

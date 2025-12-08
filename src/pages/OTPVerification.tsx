@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import authApi from '../api/auth.api';
-import { setToken, setUser } from '../utils/auth';
+import { setToken, setUser, setRefreshToken } from '../utils/auth';
 
 const OTPVerification = () => {
   const navigate = useNavigate();
@@ -66,6 +66,9 @@ const OTPVerification = () => {
 
       if (response.success && response.data) {
         setToken(response.data.token);
+        if (response.data.refreshToken) {
+          setRefreshToken(response.data.refreshToken);
+        }
         setUser(response.data.user);
 
         const role = response.data.user.role;
