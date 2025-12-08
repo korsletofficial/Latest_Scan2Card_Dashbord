@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { logout, getUser } from '../utils/auth';
 import { useState, useMemo } from 'react';
+import logo from '../assets/logowhite.svg';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -140,7 +141,10 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       }`}>
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-6 border-b border-[#854AE6]">
-          <h1 className="text-xl font-bold text-white">Scan2Card</h1>
+          <div className="flex items-center gap-2">
+            <img src={logo} alt="Scan2Card logo" className="h-8 w-auto" />
+            <h1 className="text-xl font-bold text-white">Scan2Card</h1>
+          </div>
           <button
             onClick={() => setIsSidebarOpen(false)}
             className="lg:hidden text-white hover:bg-[#6F33C5] p-2 rounded-lg"
@@ -205,7 +209,10 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <h1 className="text-lg font-bold text-gray-900">Scan2Card</h1>
+            <div className="flex items-center gap-2">
+              <img src={logo} alt="Scan2Card logo" className="h-8 w-auto" />
+              <h1 className="text-lg font-bold text-gray-900">Scan2Card</h1>
+            </div>
             <div className="w-10" /> {/* Spacer for centering */}
           </div>
         </div>

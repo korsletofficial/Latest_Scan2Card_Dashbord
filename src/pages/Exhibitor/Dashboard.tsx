@@ -78,7 +78,7 @@ const ExhibitorDashboard = () => {
         )}
 
         <div className="mb-6 lg:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Exhibitor Dashboard</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Organizer Dashboard</h1>
           <p className="text-gray-600 mt-1">Manage your events and leads</p>
         </div>
 
