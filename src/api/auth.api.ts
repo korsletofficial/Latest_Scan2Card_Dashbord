@@ -1,8 +1,9 @@
 import { apiClient } from './axios.config';
 import type { LoginCredentials, AuthResponse, RefreshTokenResponse } from '../types/auth.types';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/config';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_URL = API_BASE_URL;
 
 export const authAPI = {
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
