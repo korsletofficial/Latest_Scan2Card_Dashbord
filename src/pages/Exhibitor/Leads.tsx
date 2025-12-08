@@ -198,7 +198,7 @@ const ExhibitorLeads = () => {
                       <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Email</th>
                       <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Phone</th>
                       <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Entry Code</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Event</th>
+                      {/* <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Event</th> */}
                       <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Captured</th>
                       <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Rating</th>
                     </tr>
@@ -229,13 +229,13 @@ const ExhibitorLeads = () => {
                             <span className="text-sm text-gray-400">-</span>
                           )}
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-600">
+                        {/* <td className="py-3 px-4 text-sm text-gray-600">
                           {lead.eventId && typeof lead.eventId === 'object' 
                             ? lead.eventId.eventName 
                             : lead.isIndependentLead 
                             ? 'Independent' 
                             : '-'}
-                        </td>
+                        </td> */}
                         <td className="py-3 px-4 text-sm text-gray-600">
                           {new Date(lead.createdAt).toLocaleDateString()}
                         </td>
