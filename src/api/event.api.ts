@@ -56,6 +56,7 @@ export interface Event {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  leadCount?: number;
 }
 
 export interface EventsListResponse {

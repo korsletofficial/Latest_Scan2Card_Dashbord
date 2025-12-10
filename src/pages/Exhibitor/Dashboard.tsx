@@ -113,7 +113,7 @@ const ExhibitorDashboard = () => {
               <div className="text-center py-8 text-gray-500">Loading...</div>
             ) : topEvents.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                No events yet. <Link to="/exhibitor/events" className="text-[#854AE6] hover:underline">Create your first event</Link>
+                No events yet. <Link to="/organiser/events" className="text-[#854AE6] hover:underline">Create your first event</Link>
               </div>
             ) : (
               <div className="space-y-3">

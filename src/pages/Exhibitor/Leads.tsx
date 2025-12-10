@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,15 +7,24 @@ import leadApi, { type Lead } from '../../api/lead.api';
 import { eventAPI } from '../../api/event.api';
 
 const ExhibitorLeads = () => {
+  const [searchParams] = useSearchParams();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [events, setEvents] = useState<any[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string>('');
+  const [stalls, setStalls] = useState<any[]>([]);
+  const [selectedStall, setSelectedStall] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [filterRating, setFilterRating] = useState<number | undefined>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [exportLoading, setExportLoading] = useState(false);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalLeads, setTotalLeads] = useState(0);
+  const leadsPerPage = 10;
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -24,6 +34,18 @@ const ExhibitorLeads = () => {
           // Handle nested response structure
           const eventsData = response.data.events || response.data || [];
           setEvents(Array.isArray(eventsData) ? eventsData : []);
+
+          // After events are loaded, check URL parameters and set filters
+          const eventIdFromUrl = searchParams.get('eventId');
+          const licenseKeyFromUrl = searchParams.get('licenseKey');
+
+          if (eventIdFromUrl) {
+            setSelectedEventId(eventIdFromUrl);
+          }
+
+          if (licenseKeyFromUrl) {
+            setSelectedStall(licenseKeyFromUrl);
+          }
         }
       } catch (err: any) {
         console.error('Failed to load events:', err);
@@ -31,7 +53,30 @@ const ExhibitorLeads = () => {
     };
 
     fetchEvents();
-  }, []);
+  }, [searchParams]);
+
+  // Fetch stalls when event is selected
+  useEffect(() => {
+    const fetchStalls = async () => {
+      if (!selectedEventId) {
+        setStalls([]);
+        setSelectedStall('');
+        return;
+      }
+
+      try {
+        const response = await eventAPI.getLicenseKeys(selectedEventId);
+        if (response.success) {
+          const licenseKeys = response.data.licenseKeys || [];
+          setStalls(licenseKeys);
+        }
+      } catch (err: any) {
+        console.error('Failed to load stalls:', err);
+      }
+    };
+
+    fetchStalls();
+  }, [selectedEventId]);
 
   // Debounce search input
   useEffect(() => {
@@ -42,15 +87,24 @@ const ExhibitorLeads = () => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedEventId, selectedStall, debouncedSearch, filterRating]);
+
   useEffect(() => {
     const fetchLeads = async () => {
       try {
         setLoading(true);
         const params: any = {
-          limit: 100,
+          page: currentPage,
+          limit: leadsPerPage,
         };
         if (selectedEventId) {
           params.eventId = selectedEventId;
+        }
+        if (selectedStall) {
+          params.licenseKey = selectedStall;
         }
         if (debouncedSearch) {
           params.search = debouncedSearch;
@@ -58,10 +112,16 @@ const ExhibitorLeads = () => {
         if (filterRating) {
           params.rating = filterRating;
         }
-        
+
         const response = await leadApi.getAll(params);
         // leadApi.getAll returns { leads: Lead[], pagination: any }
         setLeads(Array.isArray(response.leads) ? response.leads : []);
+
+        // Update pagination info
+        if (response.pagination) {
+          setTotalPages(response.pagination.totalPages || 1);
+          setTotalLeads(response.pagination.total || 0);
+        }
       } catch (err: any) {
         setError(err.message || 'Failed to load leads');
         console.error('Failed to load leads:', err);
@@ -71,7 +131,7 @@ const ExhibitorLeads = () => {
     };
 
     fetchLeads();
-  }, [selectedEventId, debouncedSearch, filterRating]);
+  }, [currentPage, selectedEventId, selectedStall, debouncedSearch, filterRating, leadsPerPage]);
 
   // Export functions
   const handleExportAllData = async () => {
@@ -80,6 +140,7 @@ const ExhibitorLeads = () => {
       await leadApi.exportLeads({
         type: 'all',
         eventId: selectedEventId || undefined,
+        licenseKey: selectedStall || undefined,
         search: debouncedSearch || undefined,
         rating: filterRating,
       });
@@ -97,6 +158,7 @@ const ExhibitorLeads = () => {
       await leadApi.exportLeads({
         type: 'entryOnly',
         eventId: selectedEventId || undefined,
+        licenseKey: selectedStall || undefined,
         search: debouncedSearch || undefined,
         rating: filterRating,
       });
@@ -157,7 +219,10 @@ const ExhibitorLeads = () => {
               />
               <select
                 value={selectedEventId}
-                onChange={(e) => setSelectedEventId(e.target.value)}
+                onChange={(e) => {
+                  setSelectedEventId(e.target.value);
+                  setSelectedStall(''); // Reset stall when event changes
+                }}
                 className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#854AE6] focus:border-transparent outline-none"
               >
                 <option value="">All Events</option>
@@ -167,6 +232,20 @@ const ExhibitorLeads = () => {
                   </option>
                 ))}
               </select>
+              {selectedEventId && stalls.length > 0 && (
+                <select
+                  value={selectedStall}
+                  onChange={(e) => setSelectedStall(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#854AE6] focus:border-transparent outline-none"
+                >
+                  <option value="">All Stalls</option>
+                  {stalls.map((stall) => (
+                    <option key={stall.key} value={stall.key}>
+                      {stall.stallName || stall.key}
+                    </option>
+                  ))}
+                </select>
+              )}
               <select
                 value={filterRating || ''}
                 onChange={(e) => setFilterRating(e.target.value ? parseInt(e.target.value) : undefined)}
@@ -261,6 +340,75 @@ const ExhibitorLeads = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {!loading && leads.length > 0 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t border-gray-200">
+                <div className="text-sm text-gray-600">
+                  Showing <span className="font-semibold">{((currentPage - 1) * leadsPerPage) + 1}</span> to{' '}
+                  <span className="font-semibold">{Math.min(currentPage * leadsPerPage, totalLeads)}</span> of{' '}
+                  <span className="font-semibold">{totalLeads}</span> leads
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1.5"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Previous
+                  </Button>
+
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={currentPage === pageNum ? "primary" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`px-3 py-1.5 min-w-[40px] ${
+                            currentPage === pageNum
+                              ? 'bg-[#854AE6] hover:bg-[#6F33C5] text-white'
+                              : ''
+                          }`}
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    })}
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1.5"
+                  >
+                    Next
+                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>

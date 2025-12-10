@@ -71,6 +71,7 @@ export interface LicenseKey {
   maxActivations: number;
   eventId: string;
   eventName: string;
+  leadCount: number;
 }
 
 export interface LicenseKeysResponse {

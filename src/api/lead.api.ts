@@ -76,6 +76,7 @@ export interface GetLeadsParams {
   rating?: number;
   search?: string;
   minimal?: boolean;
+  licenseKey?: string;
 }
 
 export interface ScanCardResponse {
@@ -169,6 +170,7 @@ const leadApi = {
     eventId?: string;
     search?: string;
     rating?: number;
+    licenseKey?: string;
   }): Promise<void> => {
     // Get the S3 URL from backend
     const response = await axios.get('/leads/export', {

@@ -36,7 +36,7 @@ function App() {
       case 'SUPERADMIN':
         return <Navigate to="/super-admin/dashboard" replace />;
       case 'EXHIBITOR':
-        return <Navigate to="/exhibitor/dashboard" replace />;
+        return <Navigate to="/organiser/dashboard" replace />;
       case 'TEAMMANAGER':
         return <Navigate to="/manager/dashboard" replace />;
       case 'ENDUSER':
@@ -80,9 +80,9 @@ function App() {
           }
         />
 
-        {/* Exhibitor Routes */}
+        {/* Organiser Routes */}
         <Route
-          path="/exhibitor/dashboard"
+          path="/organiser/dashboard"
           element={
             <ProtectedRoute allowedRoles={['EXHIBITOR']}>
               <ExhibitorDashboard />
@@ -90,7 +90,7 @@ function App() {
           }
         />
         <Route
-          path="/exhibitor/events"
+          path="/organiser/events"
           element={
             <ProtectedRoute allowedRoles={['EXHIBITOR']}>
               <ExhibitorEvents />
@@ -98,7 +98,7 @@ function App() {
           }
         />
         <Route
-          path="/exhibitor/leads"
+          path="/organiser/leads"
           element={
             <ProtectedRoute allowedRoles={['EXHIBITOR']}>
               <ExhibitorLeads />

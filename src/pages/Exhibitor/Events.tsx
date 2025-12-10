@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
 import ConfirmModal from '../../components/ConfirmModal';
 import { eventAPI, type Event, type CreateEventData } from '../../api/event.api';
 import { Button } from '@/components/ui/button';
 
 const ExhibitorEvents = () => {
+  const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -272,6 +274,12 @@ const ExhibitorEvents = () => {
     window.URL.revokeObjectURL(url);
   };
 
+  // Format license key with dashes for display (XXX-XXX-XXX)
+  const formatLicenseKey = (key: string): string => {
+    // Add dash after every 3 characters
+    return key.match(/.{1,3}/g)?.join('-') || key;
+  };
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     setSuccess('License key copied to clipboard!');
@@ -494,6 +502,9 @@ const ExhibitorEvents = () => {
                       License Keys
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Leads
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -544,6 +555,14 @@ const ExhibitorEvents = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                           </svg>
                           {event.licenseKeys.length}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <div className="flex items-center gap-1">
+                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h8m-8 5h5m-9 5h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          {event.leadCount ?? 0}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -766,7 +785,7 @@ const ExhibitorEvents = () => {
                     <p className="text-sm text-green-700 mb-2">License Key Generated!</p>
                     <div className="flex items-center gap-2">
                       <code className="flex-1 bg-white px-3 py-2 rounded border text-sm font-mono break-all">
-                        {generatedLicenseKey}
+                        {formatLicenseKey(generatedLicenseKey)}
                       </code>
                       <Button
                         type="button"
@@ -1114,21 +1133,21 @@ const ExhibitorEvents = () => {
                       <table className="w-full">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">License Key</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Stall</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Email</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Usage</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Expires</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                            <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Action</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">License Key</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Stall</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Email</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Usage</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Expires</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Status</th>
+                            <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Action</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 bg-white">
                           {selectedEvent.licenseKeys.map((lk, index) => (
                             <tr key={lk._id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                              <td className="px-4 py-3 text-sm">
+                              <td className="px-4 py-3 text-sm whitespace-nowrap">
                                 <code className="bg-[#F4ECFF] text-[#5E2AB2] px-2.5 py-1 rounded text-xs font-mono border border-[#E3D4FF]">
-                                  {lk.key.substring(0, 20)}...
+                                  {formatLicenseKey(lk.key)}
                                 </code>
                               </td>
                               <td className="px-4 py-3 text-sm font-medium text-gray-900">
@@ -1163,18 +1182,36 @@ const ExhibitorEvents = () => {
                                 </span>
                               </td>
                               <td className="px-4 py-3 text-sm text-center">
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => copyToClipboard(lk.key)}
-                                  className="text-[#854AE6] hover:bg-[#F4ECFF]"
-                                  title="Copy Key"
-                                >
-                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                  </svg>
-                                </Button>
+                                <div className="flex items-center justify-center gap-2">
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      // Navigate to leads page with event and stall filters
+                                      navigate(`/organiser/leads?eventId=${selectedEvent._id}&licenseKey=${lk.key}`);
+                                    }}
+                                    className="text-[#854AE6] hover:bg-[#F4ECFF] px-3 py-1.5 text-xs font-medium"
+                                    title="View Leads"
+                                  >
+                                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    View Leads
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => copyToClipboard(lk.key)}
+                                    className="text-[#854AE6] hover:bg-[#F4ECFF]"
+                                    title="Copy Key"
+                                  >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                  </Button>
+                                </div>
                               </td>
                             </tr>
                           ))}

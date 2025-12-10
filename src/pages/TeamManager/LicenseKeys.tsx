@@ -160,6 +160,12 @@ const LicenseKeys = () => {
                         <div className="text-xs text-gray-500 mt-1">Activations</div>
                       </div>
                       <div className="text-center">
+                        <div className="text-2xl font-bold text-green-600">
+                          {key.leadCount}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">Leads</div>
+                      </div>
+                      <div className="text-center">
                         <div className="text-sm font-semibold text-gray-900">
                           {new Date(key.expiresAt).toLocaleDateString()}
                         </div>
