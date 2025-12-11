@@ -62,6 +62,8 @@ export interface GetMeetingsParams {
   eventId?: string;
   meetingStatus?: string;
   meetingMode?: string;
+  sortBy?: 'startAt' | 'createdAt';
+  sortOrder?: 'asc' | 'desc';
 }
 
 const meetingApi = {

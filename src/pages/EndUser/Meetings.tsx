@@ -12,7 +12,16 @@ const EndUserMeetings = () => {
   const [error, setError] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingMeetingId, setEditingMeetingId] = useState<string | null>(null);
-  
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalMeetings, setTotalMeetings] = useState(0);
+
+  // Sorting state
+  const [sortBy, setSortBy] = useState<'startAt' | 'createdAt'>('createdAt');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
   // Form state (using local datetime strings for input)
   const [formData, setFormData] = useState({
     leadId: '',
@@ -28,13 +37,20 @@ const EndUserMeetings = () => {
   useEffect(() => {
     fetchMeetings();
     fetchLeads();
-  }, []);
+  }, [currentPage, sortBy, sortOrder]);
 
   const fetchMeetings = async () => {
     try {
       setLoading(true);
-      const { meetings: fetchedMeetings } = await meetingApi.getAll({ limit: 100 });
+      const { meetings: fetchedMeetings, pagination } = await meetingApi.getAll({
+        page: currentPage,
+        limit: 10,
+        sortBy,
+        sortOrder
+      });
       setMeetings(fetchedMeetings);
+      setTotalPages(pagination.totalPages);
+      setTotalMeetings(pagination.total);
     } catch (err: any) {
       setError(err.message || 'Failed to load meetings');
     } finally {
@@ -335,8 +351,39 @@ const EndUserMeetings = () => {
         {/* Meetings Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Scheduled Meetings</CardTitle>
-            <CardDescription>All your upcoming and past meetings</CardDescription>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <CardTitle>Scheduled Meetings</CardTitle>
+                <CardDescription>All your upcoming and past meetings</CardDescription>
+              </div>
+
+              {/* Sort Controls */}
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">Sort by:</label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => {
+                    setSortBy(e.target.value as 'startAt' | 'createdAt');
+                    setCurrentPage(1);
+                  }}
+                  className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#854AE6] focus:border-transparent outline-none"
+                >
+                  <option value="createdAt">Created Date</option>
+                  <option value="startAt">Meeting Date</option>
+                </select>
+                <select
+                  value={sortOrder}
+                  onChange={(e) => {
+                    setSortOrder(e.target.value as 'asc' | 'desc');
+                    setCurrentPage(1);
+                  }}
+                  className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#854AE6] focus:border-transparent outline-none"
+                >
+                  <option value="desc">Newest First</option>
+                  <option value="asc">Oldest First</option>
+                </select>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {loading && !showCreateForm ? (
@@ -428,6 +475,35 @@ const EndUserMeetings = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+
+            {/* Pagination Controls */}
+            {!loading && meetings.length > 0 && totalPages > 1 && (
+              <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+                <div className="text-sm text-gray-600">
+                  Page {currentPage} of {totalPages} ({totalMeetings} total meetings)
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>
