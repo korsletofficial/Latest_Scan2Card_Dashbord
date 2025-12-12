@@ -54,6 +54,42 @@ export const authAPI = {
       throw error;
     }
   },
+
+  forgotPassword: async (email: string) => {
+    try {
+      const response = await apiClient.post('/auth/forgot-password', { email });
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw new Error(error.response.data.message || 'Failed to send reset code');
+      }
+      throw error;
+    }
+  },
+
+  verifyForgotPasswordOTP: async (userId: string, otp: string, type: string = 'forgot_password') => {
+    try {
+      const response = await apiClient.post('/auth/verify-otp', { userId, otp, type });
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw new Error(error.response.data.message || 'OTP verification failed');
+      }
+      throw error;
+    }
+  },
+
+  resetPassword: async (userId: string, verificationToken: string, newPassword: string) => {
+    try {
+      const response = await apiClient.post('/auth/reset-password', { userId, verificationToken, newPassword });
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw new Error(error.response.data.message || 'Password reset failed');
+      }
+      throw error;
+    }
+  },
 };
 
 export default authAPI;

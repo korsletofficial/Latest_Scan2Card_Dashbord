@@ -4,18 +4,24 @@ import { isAuthenticated, getUser } from './utils/auth';
 // Pages
 import Login from './pages/Login';
 import OTPVerification from './pages/OTPVerification';
+import ForgotPassword from './pages/ForgotPassword';
+import VerifyForgotPasswordOTP from './pages/VerifyForgotPasswordOTP';
+import ResetPassword from './pages/ResetPassword';
 import Unauthorized from './pages/Unauthorized';
 import SuperAdminDashboard from './pages/SuperAdmin/Dashboard';
 import SuperAdminExhibitors from './pages/SuperAdmin/Exhibitors';
 import SuperAdminFeedback from './pages/SuperAdmin/Feedback';
+import SuperAdminProfile from './pages/SuperAdmin/Profile';
 import ExhibitorDashboard from './pages/Exhibitor/Dashboard';
 import ExhibitorEvents from './pages/Exhibitor/Events';
 import ExhibitorLeads from './pages/Exhibitor/Leads';
+import ExhibitorProfile from './pages/Exhibitor/Profile';
 import TeamManagerDashboard from './pages/TeamManager/Dashboard';
 import TeamManagerTeam from './pages/TeamManager/Team';
 import TeamManagerLeadsPage from './pages/TeamManager/LeadsPage';
 import TeamManagerMeetings from './pages/TeamManager/Meetings';
 import TeamManagerLicenseKeys from './pages/TeamManager/LicenseKeys';
+import TeamManagerProfile from './pages/TeamManager/Profile';
 import EndUserDashboard from './pages/EndUser/Dashboard';
 import EndUserLeads from './pages/EndUser/Leads';
 import EndUserEvents from './pages/EndUser/Events';
@@ -52,6 +58,9 @@ function App() {
         <Route path="/" element={<HomeRedirect />} />
         <Route path="/login" element={<Login />} />
         <Route path="/verify-otp" element={<OTPVerification />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/verify-forgot-password" element={<VerifyForgotPasswordOTP />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
 
         {/* Super Admin Routes */}
@@ -79,6 +88,14 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/super-admin/profile"
+          element={
+            <ProtectedRoute allowedRoles={['SUPERADMIN']}>
+              <SuperAdminProfile />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Organiser Routes */}
         <Route
@@ -102,6 +119,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['EXHIBITOR']}>
               <ExhibitorLeads />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/organiser/profile"
+          element={
+            <ProtectedRoute allowedRoles={['EXHIBITOR']}>
+              <ExhibitorProfile />
             </ProtectedRoute>
           }
         />
@@ -145,6 +170,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['TEAMMANAGER']}>
               <TeamManagerLicenseKeys />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/profile"
+          element={
+            <ProtectedRoute allowedRoles={['TEAMMANAGER']}>
+              <TeamManagerProfile />
             </ProtectedRoute>
           }
         />
