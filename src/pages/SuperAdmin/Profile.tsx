@@ -2,16 +2,15 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import profileApi, { type UserProfile, type UpdateProfileData, type ChangePasswordData, type SubmitFeedbackData, type FeedbackData } from '../../api/profile.api';
+import profileApi, { type UserProfile, type UpdateProfileData, type ChangePasswordData } from '../../api/profile.api';
 import authApi from '../../api/auth.api';
 
 const SuperAdminProfile = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [feedbacks, setFeedbacks] = useState<FeedbackData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [activeTab, setActiveTab] = useState<'profile' | 'password' | 'feedback'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
 
   // Profile form state
   const [profileForm, setProfileForm] = useState<UpdateProfileData>({
@@ -31,19 +30,9 @@ const SuperAdminProfile = () => {
   });
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // Feedback form state
-  const [feedbackForm, setFeedbackForm] = useState<SubmitFeedbackData>({
-    message: '',
-    rating: undefined,
-    category: 'other',
-  });
-
   useEffect(() => {
     fetchUserProfile();
-    if (activeTab === 'feedback') {
-      fetchFeedbackHistory();
-    }
-  }, [activeTab]);
+  }, []);
 
   const fetchUserProfile = async () => {
     try {
@@ -64,14 +53,6 @@ const SuperAdminProfile = () => {
     }
   };
 
-  const fetchFeedbackHistory = async () => {
-    try {
-      const { feedbacks: fetchedFeedbacks } = await profileApi.getFeedbackHistory(1, 50);
-      setFeedbacks(fetchedFeedbacks);
-    } catch (err: any) {
-      console.error('Failed to load feedback:', err);
-    }
-  };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -144,35 +125,6 @@ const SuperAdminProfile = () => {
     }
   };
 
-  const handleSubmitFeedback = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!feedbackForm.message) {
-      setError('Please provide feedback message');
-      return;
-    }
-    try {
-      setLoading(true);
-      setError('');
-      setSuccessMessage('');
-      await profileApi.submitFeedback(feedbackForm);
-      setSuccessMessage('Thank you for your feedback!');
-      setFeedbackForm({ message: '', rating: undefined, category: 'other' });
-      fetchFeedbackHistory();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to submit feedback');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-700';
-      case 'reviewed': return 'bg-blue-100 text-blue-700';
-      case 'resolved': return 'bg-green-100 text-green-700';
-      default: return 'bg-gray-100 text-gray-700';
-    }
-  };
 
   return (
     <DashboardLayout>
@@ -222,19 +174,6 @@ const SuperAdminProfile = () => {
               }`}
             >
               Change Password
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setActiveTab('feedback')}
-              className={`rounded-none pb-3 px-2 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === 'feedback'
-                  ? 'border-[#854AE6] text-[#854AE6]'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Feedback
             </Button>
           </nav>
         </div>
@@ -434,129 +373,6 @@ const SuperAdminProfile = () => {
           </Card>
         )}
 
-        {/* Feedback Tab */}
-        {activeTab === 'feedback' && (
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Submit Feedback</CardTitle>
-                <CardDescription>Help us improve by sharing your thoughts</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmitFeedback} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                      <select
-                        value={feedbackForm.category}
-                        onChange={(e) => setFeedbackForm({ ...feedbackForm, category: e.target.value as any })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#854AE6] focus:border-transparent outline-none"
-                      >
-                        <option value="other">General</option>
-                        <option value="bug">Bug Report</option>
-                        <option value="feature_request">Feature Request</option>
-                        <option value="improvement">Improvement</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Rating (Optional)</label>
-                      <div className="flex gap-2 items-center pt-2">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Button
-                            key={star}
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setFeedbackForm({ ...feedbackForm, rating: star })}
-                            className="focus-visible:ring-0 focus-visible:ring-offset-0"
-                          >
-                            <svg
-                              className={`w-6 h-6 ${
-                                feedbackForm.rating && star <= feedbackForm.rating
-                                  ? 'text-yellow-400 fill-current'
-                                  : 'text-gray-300'
-                              }`}
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-                              />
-                            </svg>
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Your Feedback *</label>
-                    <textarea
-                      value={feedbackForm.message}
-                      onChange={(e) => setFeedbackForm({ ...feedbackForm, message: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#854AE6] focus:border-transparent outline-none"
-                      rows={4}
-                      placeholder="Share your thoughts, suggestions, or report issues..."
-                      required
-                    />
-                  </div>
-
-                  <Button type="submit" disabled={loading}>
-                    {loading ? 'Submitting...' : 'Submit Feedback'}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-
-            {/* Feedback History */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Your Feedback History</CardTitle>
-                <CardDescription>Track the status of your submitted feedback</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {feedbacks.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    No feedback submitted yet
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {feedbacks.map((feedback) => (
-                      <div key={feedback._id} className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-medium text-gray-500 uppercase">
-                              {feedback.category.replace('_', ' ')}
-                            </span>
-                            {feedback.rating && (
-                              <div className="flex items-center gap-1">
-                                <svg className="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 24 24">
-                                  <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                                </svg>
-                                <span className="text-xs text-gray-600">{feedback.rating}/5</span>
-                              </div>
-                            )}
-                          </div>
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(feedback.status)}`}>
-                            {feedback.status}
-                          </span>
-                        </div>
-                        <p className="text-gray-700 mb-2">{feedback.message}</p>
-                        <p className="text-xs text-gray-500">
-                          {new Date(feedback.createdAt).toLocaleDateString()} at {new Date(feedback.createdAt).toLocaleTimeString()}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        )}
       </div>
     </DashboardLayout>
   );
