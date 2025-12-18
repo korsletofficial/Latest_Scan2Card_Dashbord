@@ -494,15 +494,28 @@ const TeamManagerProfile = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Your Feedback *</label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-sm font-medium text-gray-700">Your Feedback *</label>
+                      <span className={`text-xs ${feedbackForm.message.length > 1000 ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
+                        {feedbackForm.message.length}/1000
+                      </span>
+                    </div>
                     <textarea
                       value={feedbackForm.message}
                       onChange={(e) => setFeedbackForm({ ...feedbackForm, message: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#854AE6] focus:border-transparent outline-none"
                       rows={4}
                       placeholder="Share your thoughts, suggestions, or report issues..."
+                      maxLength={1000}
                       required
                     />
+                    {feedbackForm.message.length > 950 && (
+                      <p className={`text-xs mt-1 ${feedbackForm.message.length > 1000 ? 'text-red-600' : 'text-yellow-600'}`}>
+                        {feedbackForm.message.length > 1000
+                          ? 'Maximum character limit exceeded'
+                          : `${1000 - feedbackForm.message.length} characters remaining`}
+                      </p>
+                    )}
                   </div>
 
                   <Button type="submit" disabled={loading}>

@@ -241,10 +241,14 @@ const SuperAdminFeedback = () => {
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                           </svg>
-                          <span className="font-medium">{feedback.userId.firstName} {feedback.userId.lastName}</span>
+                          <span className="font-medium">
+                            {feedback.userId
+                              ? `${feedback.userId.firstName} ${feedback.userId.lastName}`
+                              : 'Unknown User'}
+                          </span>
                           <span className="text-gray-400">•</span>
-                          <span>{feedback.userId.email}</span>
-                          {feedback.userId.companyName && (
+                          <span>{feedback.userId?.email || 'No email available'}</span>
+                          {feedback.userId?.companyName && (
                             <>
                               <span className="text-gray-400">•</span>
                               <span>{feedback.userId.companyName}</span>

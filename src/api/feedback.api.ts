@@ -12,7 +12,7 @@ export interface FeedbackData {
       _id: string;
       roleName: string;
     };
-  };
+  } | null;
   message: string;
   rating?: number;
   category: 'bug' | 'feature_request' | 'improvement' | 'other';
