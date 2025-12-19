@@ -4,6 +4,7 @@ import QRScanner from '../../components/QRScanner';
 import leadApi, { type Lead, type CreateLeadData, type UpdateLeadData } from '../../api/lead.api';
 import { Button } from '@/components/ui/button';
 import rsvpApi, { type Rsvp } from '../../api/rsvp.api';
+import toast from 'react-hot-toast';
 
 const EndUserLeads = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -103,11 +104,20 @@ const EndUserLeads = () => {
       if (formData.entryCode) fd.append('entryCode', formData.entryCode);
       if (formData.isIndependentLead !== undefined) fd.append('isIndependentLead', String(formData.isIndependentLead));
       await leadApi.create(fd);
+      toast.success('Lead created successfully!');
       setShowCreateModal(false);
       resetForm();
       fetchLeads();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create lead:', error);
+      // Extract error message from axios error response
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to create lead. Please try again.';
+      toast.error(errorMessage, {
+        duration: 6000,
+        style: {
+          maxWidth: '500px',
+        },
+      });
     }
   };
 
@@ -122,12 +132,21 @@ const EndUserLeads = () => {
         entryCode: formData.entryCode,
       };
       await leadApi.update(selectedLead._id, updateData);
+      toast.success('Lead updated successfully!');
       setShowEditModal(false);
       setSelectedLead(null);
       resetForm();
       fetchLeads();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to update lead:', error);
+      // Extract error message from axios error response
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to update lead. Please try again.';
+      toast.error(errorMessage, {
+        duration: 6000,
+        style: {
+          maxWidth: '500px',
+        },
+      });
     }
   };
 
@@ -135,11 +154,14 @@ const EndUserLeads = () => {
     if (!selectedLead) return;
     try {
       await leadApi.delete(selectedLead._id);
+      toast.success('Lead deleted successfully!');
       setShowDeleteConfirm(false);
       setSelectedLead(null);
       fetchLeads();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to delete lead:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to delete lead. Please try again.';
+      toast.error(errorMessage);
     }
   };
 
