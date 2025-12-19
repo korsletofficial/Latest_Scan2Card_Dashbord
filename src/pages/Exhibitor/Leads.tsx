@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import leadApi, { type Lead } from '../../api/lead.api';
 import { eventAPI } from '../../api/event.api';
+import { X } from 'lucide-react';
 
 const ExhibitorLeads = () => {
   const [searchParams] = useSearchParams();
@@ -25,6 +26,10 @@ const ExhibitorLeads = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalLeads, setTotalLeads] = useState(0);
   const leadsPerPage = 10;
+
+  // Drawer state
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -132,6 +137,17 @@ const ExhibitorLeads = () => {
 
     fetchLeads();
   }, [currentPage, selectedEventId, selectedStall, debouncedSearch, filterRating, leadsPerPage]);
+
+  // Handle row click to open drawer
+  const handleRowClick = (lead: Lead) => {
+    setSelectedLead(lead);
+    setIsDrawerOpen(true);
+  };
+
+  const handleCloseDrawer = () => {
+    setIsDrawerOpen(false);
+    setSelectedLead(null);
+  };
 
   // Export functions
   const handleExportAllData = async () => {
@@ -284,9 +300,13 @@ const ExhibitorLeads = () => {
                   </thead>
                   <tbody>
                     {leads.map((lead) => (
-                      <tr key={lead._id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <tr
+                        key={lead._id}
+                        className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
+                        onClick={() => handleRowClick(lead)}
+                      >
                         <td className="py-3 px-4 text-sm text-gray-900">
-                          {lead.details?.firstName || lead.details?.lastName 
+                          {lead.details?.firstName || lead.details?.lastName
                             ? `${lead.details?.firstName || ''} ${lead.details?.lastName || ''}`.trim()
                             : '-'}
                         </td>
@@ -309,10 +329,10 @@ const ExhibitorLeads = () => {
                           )}
                         </td>
                         {/* <td className="py-3 px-4 text-sm text-gray-600">
-                          {lead.eventId && typeof lead.eventId === 'object' 
-                            ? lead.eventId.eventName 
-                            : lead.isIndependentLead 
-                            ? 'Independent' 
+                          {lead.eventId && typeof lead.eventId === 'object'
+                            ? lead.eventId.eventName
+                            : lead.isIndependentLead
+                            ? 'Independent'
                             : '-'}
                         </td> */}
                         <td className="py-3 px-4 text-sm text-gray-600">
@@ -322,10 +342,10 @@ const ExhibitorLeads = () => {
                           {lead.rating ? (
                             <span className="inline-flex items-center">
                               {[...Array(5)].map((_, i) => (
-                                <svg 
-                                  key={i} 
+                                <svg
+                                  key={i}
                                   className={`w-4 h-4 ${i < lead.rating! ? 'text-yellow-400' : 'text-gray-300'}`}
-                                  fill="currentColor" 
+                                  fill="currentColor"
                                   viewBox="0 0 20 20"
                                 >
                                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
@@ -414,6 +434,288 @@ const ExhibitorLeads = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Lead Details Drawer */}
+      {isDrawerOpen && (
+        <div className="fixed inset-0 z-50">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+            onClick={handleCloseDrawer}
+          />
+
+          {/* Drawer */}
+          <div className="absolute right-0 top-0 h-full w-full sm:w-[550px] md:w-[650px] bg-white shadow-2xl transform transition-transform duration-300 ease-in-out overflow-y-auto">
+            {/* Header */}
+            <div className="sticky top-0 z-10 bg-gradient-to-r from-[#854AE6] to-[#6F33C5] px-6 py-5 flex items-center justify-between shadow-md">
+              <div>
+                <h2 className="text-xl font-bold text-white">Lead Details</h2>
+                <p className="text-sm text-purple-100 mt-0.5">Complete information about this lead</p>
+              </div>
+              <button
+                onClick={handleCloseDrawer}
+                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-white" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 bg-gray-50">
+              {selectedLead ? (
+                <div className="space-y-4">
+                  {/* Lead Type Badges */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#F4ECFF] text-[#5E2AB2] border border-[#E3D4FF]">
+                      {selectedLead.leadType === 'full_scan' ? 'Full Scan' :
+                       selectedLead.leadType === 'entry_code' ? 'Entry Code' : 'Manual Entry'}
+                    </span>
+                    {selectedLead.isIndependentLead && (
+                      <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+                        Independent Lead
+                      </span>
+                    )}
+                    {selectedLead.rating && (
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-gray-200">
+                        {[...Array(5)].map((_, i) => (
+                          <svg
+                            key={i}
+                            className={`w-3.5 h-3.5 ${i < selectedLead.rating! ? 'text-yellow-400' : 'text-gray-300'}`}
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Scanned Card Image */}
+                  {selectedLead.scannedCardImage && (
+                    <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+                      <h3 className="text-sm font-semibold text-gray-900 mb-3">Scanned Business Card</h3>
+                      <div className="border border-gray-200 rounded-lg overflow-hidden">
+                        <img
+                          src={selectedLead.scannedCardImage}
+                          alt="Business Card"
+                          className="w-full h-auto"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Contact Information Card */}
+                  <div className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-4 pb-3 border-b border-gray-100">Contact Information</h3>
+                    <div className="space-y-3.5">
+                      <div>
+                        <p className="text-xs font-medium text-gray-500 mb-1">Full Name</p>
+                        <p className="text-sm text-gray-900">
+                          {selectedLead.details?.firstName || selectedLead.details?.lastName
+                            ? `${selectedLead.details?.firstName || ''} ${selectedLead.details?.lastName || ''}`.trim()
+                            : '-'}
+                        </p>
+                      </div>
+
+                      {selectedLead.details?.email && (
+                        <div>
+                          <p className="text-xs font-medium text-gray-500 mb-1">Email</p>
+                          <p className="text-sm text-[#854AE6]">
+                            {selectedLead.details.email}
+                          </p>
+                        </div>
+                      )}
+
+                      {selectedLead.details?.phoneNumber && (
+                        <div>
+                          <p className="text-xs font-medium text-gray-500 mb-1">Phone Number</p>
+                          <p className="text-sm text-gray-900">
+                            {selectedLead.details.phoneNumber}
+                          </p>
+                        </div>
+                      )}
+
+                      {selectedLead.details?.company && (
+                        <div>
+                          <p className="text-xs font-medium text-gray-500 mb-1">Company</p>
+                          <p className="text-sm text-gray-900">
+                            {selectedLead.details.company}
+                          </p>
+                        </div>
+                      )}
+
+                      {selectedLead.details?.position && (
+                        <div>
+                          <p className="text-xs font-medium text-gray-500 mb-1">Position</p>
+                          <p className="text-sm text-gray-900">
+                            {selectedLead.details.position}
+                          </p>
+                        </div>
+                      )}
+
+                      {selectedLead.details?.website && (
+                        <div>
+                          <p className="text-xs font-medium text-gray-500 mb-1">Website</p>
+                          <a
+                            href={selectedLead.details.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-[#854AE6] hover:text-[#6F33C5] hover:underline break-words"
+                          >
+                            {selectedLead.details.website}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Address Information Card */}
+                  {(selectedLead.details?.address || selectedLead.details?.city || selectedLead.details?.country) && (
+                    <div className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
+                      <h3 className="text-sm font-semibold text-gray-900 mb-4 pb-3 border-b border-gray-100">Address</h3>
+                      <div className="space-y-3.5">
+                        {selectedLead.details?.address && (
+                          <div>
+                            <p className="text-xs font-medium text-gray-500 mb-1">Street Address</p>
+                            <p className="text-sm text-gray-900">
+                              {selectedLead.details.address}
+                            </p>
+                          </div>
+                        )}
+
+                        {selectedLead.details?.city && (
+                          <div>
+                            <p className="text-xs font-medium text-gray-500 mb-1">City</p>
+                            <p className="text-sm text-gray-900">
+                              {selectedLead.details.city}
+                            </p>
+                          </div>
+                        )}
+
+                        {selectedLead.details?.country && (
+                          <div>
+                            <p className="text-xs font-medium text-gray-500 mb-1">Country</p>
+                            <p className="text-sm text-gray-900">
+                              {selectedLead.details.country}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Entry Code Card */}
+                  {selectedLead.entryCode && (
+                    <div className="bg-white rounded-lg border border-purple-200 p-5 shadow-sm">
+                      <h3 className="text-sm font-semibold text-gray-900 mb-3">Entry Code</h3>
+                      <div className="bg-[#F4ECFF] rounded-lg p-4 border border-[#E3D4FF]">
+                        <p className="text-center text-lg font-mono font-bold text-[#5E2AB2] tracking-wider">
+                          {selectedLead.entryCode}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Notes Card */}
+                  {selectedLead.details?.notes && (
+                    <div className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
+                      <h3 className="text-sm font-semibold text-gray-900 mb-3">Notes</h3>
+                      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                          {selectedLead.details.notes}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Event Information Card */}
+                  {selectedLead.eventId && typeof selectedLead.eventId === 'object' && (
+                    <div className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
+                      <h3 className="text-sm font-semibold text-gray-900 mb-4 pb-3 border-b border-gray-100">Event Information</h3>
+                      <div className="space-y-3.5">
+                        <div>
+                          <p className="text-xs font-medium text-gray-500 mb-1">Event Name</p>
+                          <p className="text-sm text-gray-900">
+                            {selectedLead.eventId.eventName}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-xs font-medium text-gray-500 mb-1">Event Type</p>
+                          <p className="text-sm text-gray-900 capitalize">
+                            {selectedLead.eventId.type}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-xs font-medium text-gray-500 mb-1">Event Date</p>
+                          <p className="text-sm text-gray-900">
+                            {new Date(selectedLead.eventId.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} - {new Date(selectedLead.eventId.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* OCR Text Card */}
+                  {selectedLead.ocrText && (
+                    <div className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
+                      <h3 className="text-sm font-semibold text-gray-900 mb-3">Raw OCR Text</h3>
+                      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <p className="font-mono text-xs text-gray-700 whitespace-pre-wrap break-words">
+                          {selectedLead.ocrText}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Metadata Card */}
+                  <div className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-4 pb-3 border-b border-gray-100">Metadata</h3>
+                    <div className="space-y-3.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-gray-500">Created</span>
+                        <span className="text-xs text-gray-900">
+                          {new Date(selectedLead.createdAt).toLocaleString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-gray-500">Last Updated</span>
+                        <span className="text-xs text-gray-900">
+                          {new Date(selectedLead.updatedAt).toLocaleString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-gray-500 mb-1">Lead ID</p>
+                        <p className="text-xs font-mono text-gray-600 bg-gray-50 px-3 py-2 rounded border border-gray-200">
+                          {selectedLead._id}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  <p className="text-sm font-medium">No lead details available</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 };
