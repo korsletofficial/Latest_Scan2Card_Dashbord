@@ -314,10 +314,18 @@ const ExhibitorLeads = () => {
                           {lead.details?.company || '-'}
                         </td>
                         <td className="py-3 px-4 text-sm text-gray-600">
-                          {lead.details?.email || '-'}
+                          {lead.details?.emails && lead.details.emails.length > 0 ? (
+                            lead.details.emails.map((e: string, i: number) => <div key={i}>{e}</div>)
+                          ) : (
+                            lead.details?.email || '-'
+                          )}
                         </td>
                         <td className="py-3 px-4 text-sm text-gray-600">
-                          {lead.details?.phoneNumber || '-'}
+                          {lead.details?.phoneNumbers && lead.details.phoneNumbers.length > 0 ? (
+                            lead.details.phoneNumbers.map((p: string, i: number) => <div key={i}>{p}</div>)
+                          ) : (
+                            lead.details?.phoneNumber || '-'
+                          )}
                         </td>
                         <td className="py-3 px-4 text-sm text-gray-600">
                           {lead.entryCode ? (
@@ -404,11 +412,10 @@ const ExhibitorLeads = () => {
                           variant={currentPage === pageNum ? "primary" : "outline"}
                           size="sm"
                           onClick={() => setCurrentPage(pageNum)}
-                          className={`px-3 py-1.5 min-w-[40px] ${
-                            currentPage === pageNum
-                              ? 'bg-[#854AE6] hover:bg-[#6F33C5] text-white'
-                              : ''
-                          }`}
+                          className={`px-3 py-1.5 min-w-[40px] ${currentPage === pageNum
+                            ? 'bg-[#854AE6] hover:bg-[#6F33C5] text-white'
+                            : ''
+                            }`}
                         >
                           {pageNum}
                         </Button>
@@ -468,7 +475,7 @@ const ExhibitorLeads = () => {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#F4ECFF] text-[#5E2AB2] border border-[#E3D4FF]">
                       {selectedLead.leadType === 'full_scan' ? 'Full Scan' :
-                       selectedLead.leadType === 'entry_code' ? 'Entry Code' : 'Manual Entry'}
+                        selectedLead.leadType === 'entry_code' ? 'Entry Code' : 'Manual Entry'}
                     </span>
                     {selectedLead.isIndependentLead && (
                       <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
@@ -492,18 +499,33 @@ const ExhibitorLeads = () => {
                   </div>
 
                   {/* Scanned Card Image */}
-                  {selectedLead.scannedCardImage && (
+                  {((selectedLead.images && selectedLead.images.length > 0) || selectedLead.scannedCardImage) && (
                     <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
                       <h3 className="text-sm font-semibold text-gray-900 mb-3">Scanned Business Card</h3>
-                      <div className="border border-gray-200 rounded-lg overflow-hidden">
-                        <img
-                          src={selectedLead.scannedCardImage}
-                          alt="Business Card"
-                          className="w-full h-auto"
-                        />
+                      <div className="grid grid-cols-1 gap-4">
+                        {selectedLead.images && selectedLead.images.length > 0 ? (
+                          selectedLead.images.map((img, idx) => (
+                            <div key={idx} className="border border-gray-200 rounded-lg overflow-hidden">
+                              <img
+                                src={img}
+                                alt={`Business Card ${idx + 1}`}
+                                className="w-full h-auto"
+                              />
+                            </div>
+                          ))
+                        ) : (
+                          <div className="border border-gray-200 rounded-lg overflow-hidden">
+                            <img
+                              src={selectedLead.scannedCardImage}
+                              alt="Business Card"
+                              className="w-full h-auto"
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
+
 
                   {/* Contact Information Card */}
                   <div className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
@@ -518,21 +540,33 @@ const ExhibitorLeads = () => {
                         </p>
                       </div>
 
-                      {selectedLead.details?.email && (
+                      {((selectedLead.details?.emails && selectedLead.details.emails.length > 0) || selectedLead.details?.email) && (
                         <div>
-                          <p className="text-xs font-medium text-gray-500 mb-1">Email</p>
-                          <p className="text-sm text-[#854AE6]">
-                            {selectedLead.details.email}
-                          </p>
+                          <p className="text-xs font-medium text-gray-500 mb-1">Email(s)</p>
+                          <div className="text-sm text-[#854AE6]">
+                            {selectedLead.details?.emails && selectedLead.details.emails.length > 0 ? (
+                              selectedLead.details.emails.map((email: string, idx: number) => (
+                                <div key={idx}>{email}</div>
+                              ))
+                            ) : (
+                              selectedLead.details?.email
+                            )}
+                          </div>
                         </div>
                       )}
 
-                      {selectedLead.details?.phoneNumber && (
+                      {((selectedLead.details?.phoneNumbers && selectedLead.details.phoneNumbers.length > 0) || selectedLead.details?.phoneNumber) && (
                         <div>
-                          <p className="text-xs font-medium text-gray-500 mb-1">Phone Number</p>
-                          <p className="text-sm text-gray-900">
-                            {selectedLead.details.phoneNumber}
-                          </p>
+                          <p className="text-xs font-medium text-gray-500 mb-1">Phone Number(s)</p>
+                          <div className="text-sm text-gray-900">
+                            {selectedLead.details?.phoneNumbers && selectedLead.details.phoneNumbers.length > 0 ? (
+                              selectedLead.details.phoneNumbers.map((phone: string, idx: number) => (
+                                <div key={idx}>{phone}</div>
+                              ))
+                            ) : (
+                              selectedLead.details?.phoneNumber
+                            )}
+                          </div>
                         </div>
                       )}
 
@@ -714,9 +748,9 @@ const ExhibitorLeads = () => {
               )}
             </div>
           </div>
-        </div>
+        </div >
       )}
-    </DashboardLayout>
+    </DashboardLayout >
   );
 };
 

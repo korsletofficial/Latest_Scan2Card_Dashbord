@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "../../api/axios.config";
+import MultiInput from "@/components/ui/MultiInput";
 
 interface TeamMember {
   _id: string;
@@ -18,6 +19,7 @@ interface Lead {
   userId: string;
   eventId: string;
   scannedCardImage: string;
+  images?: string[];
   details: any;
   createdAt: string;
   rating?: number;
@@ -157,7 +159,7 @@ const TeamManagerLeads: React.FC = () => {
         details: editedLead.details,
         rating: editedLead.rating,
       });
-      
+
       // Update the leads list
       setLeads(leads.map(l => l._id === editedLead._id ? editedLead : l));
       setDrawer({ isOpen: false, lead: null, isEditing: false });
@@ -235,14 +237,15 @@ const TeamManagerLeads: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Event</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Lead Name</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Email</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Phone Number</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Scanned Card</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Created At</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {leads.map((lead) => (
-                  <tr 
-                    key={lead._id} 
+                  <tr
+                    key={lead._id}
                     className="hover:bg-gray-50 transition-colors cursor-pointer"
                     onClick={() => openDrawer(lead)}
                   >
@@ -256,9 +259,28 @@ const TeamManagerLeads: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">{events.find(e => e._id === lead.eventId)?.eventName || "-"}</td>
                     <td className="px-6 py-4">{lead.details?.firstName} {lead.details?.lastName}</td>
-                    <td className="px-6 py-4">{lead.details?.email}</td>
                     <td className="px-6 py-4">
-                      {lead.scannedCardImage ? <img src={lead.scannedCardImage} alt="Scanned Card" className="h-12 rounded shadow" /> : "-"}
+                      {lead.details?.emails && lead.details.emails.length > 0 ? (
+                        lead.details.emails.map((e: string, i: number) => <div key={i}>{e}</div>)
+                      ) : (
+                        lead.details?.email
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      {lead.details?.phoneNumbers && lead.details.phoneNumbers.length > 0 ? (
+                        lead.details.phoneNumbers.map((p: string, i: number) => <div key={i}>{p}</div>)
+                      ) : (
+                        lead.details?.phoneNumber || '-'
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      {lead.images && lead.images.length > 0 ? (
+                        <img src={lead.images[0]} alt="Scanned Card" className="h-12 rounded shadow" />
+                      ) : lead.scannedCardImage ? (
+                        <img src={lead.scannedCardImage} alt="Scanned Card" className="h-12 rounded shadow" />
+                      ) : (
+                        "-"
+                      )}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">{new Date(lead.createdAt).toLocaleString()}</td>
                   </tr>
@@ -286,7 +308,7 @@ const TeamManagerLeads: React.FC = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
                   </svg>
                 </button>
-                
+
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
@@ -315,11 +337,10 @@ const TeamManagerLeads: React.FC = () => {
                       <button
                         key={pageNum}
                         onClick={() => setCurrentPage(pageNum)}
-                        className={`px-3 py-1.5 text-sm min-w-[40px] rounded-lg border ${
-                          currentPage === pageNum
-                            ? 'bg-[#854AE6] text-white border-[#854AE6] hover:bg-[#6F33C5]'
-                            : 'bg-white border-gray-300 hover:bg-gray-50'
-                        }`}
+                        className={`px-3 py-1.5 text-sm min-w-[40px] rounded-lg border ${currentPage === pageNum
+                          ? 'bg-[#854AE6] text-white border-[#854AE6] hover:bg-[#6F33C5]'
+                          : 'bg-white border-gray-300 hover:bg-gray-50'
+                          }`}
                       >
                         {pageNum}
                       </button>
@@ -337,7 +358,7 @@ const TeamManagerLeads: React.FC = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
-                
+
                 <button
                   onClick={() => setCurrentPage(totalPages)}
                   disabled={currentPage === totalPages}
@@ -354,358 +375,398 @@ const TeamManagerLeads: React.FC = () => {
         </div>
       )}
 
-        {/* Lead Details Drawer */}
-        {drawer.isOpen && drawer.lead && (
-          <>
-            {/* Backdrop */}
-            <div 
-              className="fixed inset-0 bg-black bg-opacity-40 z-40 backdrop-blur-sm"
-              onClick={closeDrawer}
-            />
-            
-            {/* Drawer */}
-            <div className="fixed right-0 top-0 h-full w-full max-w-2xl bg-white shadow-2xl z-50 overflow-y-auto">
-              {/* Header */}
-              <div className="sticky top-0 bg-gradient-to-r from-[#854AE6] to-[#6F33C5] px-6 py-6 flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-white">
-                    {drawer.isEditing ? "Edit Lead" : "Lead Details"}
-                  </h2>
-                  <p className="text-[#E8D5F8] text-sm mt-1">
-                    {drawer.lead.details?.firstName} {drawer.lead.details?.lastName}
-                  </p>
-                </div>
-                <button
-                  onClick={closeDrawer}
-                  className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+      {/* Lead Details Drawer */}
+      {drawer.isOpen && drawer.lead && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black bg-opacity-40 z-40 backdrop-blur-sm"
+            onClick={closeDrawer}
+          />
+
+          {/* Drawer */}
+          <div className="fixed right-0 top-0 h-full w-full max-w-2xl bg-white shadow-2xl z-50 overflow-y-auto">
+            {/* Header */}
+            <div className="sticky top-0 bg-gradient-to-r from-[#854AE6] to-[#6F33C5] px-6 py-6 flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-white">
+                  {drawer.isEditing ? "Edit Lead" : "Lead Details"}
+                </h2>
+                <p className="text-[#E8D5F8] text-sm mt-1">
+                  {drawer.lead.details?.firstName} {drawer.lead.details?.lastName}
+                </p>
               </div>
-
-              {/* Content */}
-              <div className="p-8 space-y-6">
-                {/* Source Info Card */}
-                <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-5 border border-slate-200">
-                  <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <svg className="w-5 h-5 text-[#854AE6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Source Information
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Team Member</p>
-                      <p className="text-gray-900 font-medium mt-1">
-                        {drawer.lead && teamMembers.find(m => m._id === drawer.lead!.userId)?.firstName} {drawer.lead && teamMembers.find(m => m._id === drawer.lead!.userId)?.lastName}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Email</p>
-                      <p className="text-gray-900 font-medium mt-1 break-all">
-                        {drawer.lead && teamMembers.find(m => m._id === drawer.lead!.userId)?.email || "-"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Event</p>
-                      <p className="text-gray-900 font-medium mt-1">
-                        {drawer.lead && events.find(e => e._id === drawer.lead!.eventId)?.eventName}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Created</p>
-                      <p className="text-gray-900 font-medium mt-1">
-                        {drawer.lead && new Date(drawer.lead.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Lead Information Section */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-gray-900 text-lg flex items-center gap-2">
-                    <svg className="w-5 h-5 text-[#854AE6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    Contact Information
-                  </h3>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* First Name */}
-                    <div className="space-y-2">
-                      <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">First Name</label>
-                      {drawer.isEditing ? (
-                        <input
-                          type="text"
-                          value={editedLead?.details?.firstName || ""}
-                          onChange={(e) => handleEditChange("firstName", e.target.value)}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#854AE6] focus:ring-2 focus:ring-[#854AE6]/10 outline-none transition-all"
-                          placeholder="Enter first name"
-                        />
-                      ) : (
-                        <p className="text-gray-900 font-medium py-3 px-4 bg-gray-50 rounded-lg">
-                          {drawer.lead.details?.firstName || "-"}
-                        </p>
-                      )}
-                    </div>
-                    
-                    {/* Last Name */}
-                    <div className="space-y-2">
-                      <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">Last Name</label>
-                      {drawer.isEditing ? (
-                        <input
-                          type="text"
-                          value={editedLead?.details?.lastName || ""}
-                          onChange={(e) => handleEditChange("lastName", e.target.value)}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#854AE6] focus:ring-2 focus:ring-[#854AE6]/10 outline-none transition-all"
-                          placeholder="Enter last name"
-                        />
-                      ) : (
-                        <p className="text-gray-900 font-medium py-3 px-4 bg-gray-50 rounded-lg">
-                          {drawer.lead.details?.lastName || "-"}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Company */}
-                    <div className="space-y-2">
-                      <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">Company</label>
-                      {drawer.isEditing ? (
-                        <input
-                          type="text"
-                          value={editedLead?.details?.company || ""}
-                          onChange={(e) => handleEditChange("company", e.target.value)}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#854AE6] focus:ring-2 focus:ring-[#854AE6]/10 outline-none transition-all"
-                          placeholder="Enter company"
-                        />
-                      ) : (
-                        <p className="text-gray-900 font-medium py-3 px-4 bg-gray-50 rounded-lg">
-                          {drawer.lead.details?.company || "-"}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Position */}
-                    <div className="space-y-2">
-                      <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">Position</label>
-                      {drawer.isEditing ? (
-                        <input
-                          type="text"
-                          value={editedLead?.details?.position || ""}
-                          onChange={(e) => handleEditChange("position", e.target.value)}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#854AE6] focus:ring-2 focus:ring-[#854AE6]/10 outline-none transition-all"
-                          placeholder="Enter position"
-                        />
-                      ) : (
-                        <p className="text-gray-900 font-medium py-3 px-4 bg-gray-50 rounded-lg">
-                          {drawer.lead.details?.position || "-"}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Email - Full Width */}
-                    <div className="col-span-2 space-y-2">
-                      <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">Email</label>
-                      {drawer.isEditing ? (
-                        <input
-                          type="email"
-                          value={editedLead?.details?.email || ""}
-                          onChange={(e) => handleEditChange("email", e.target.value)}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#854AE6] focus:ring-2 focus:ring-[#854AE6]/10 outline-none transition-all"
-                          placeholder="Enter email"
-                        />
-                      ) : (
-                        <p className="text-gray-900 font-medium py-3 px-4 bg-gray-50 rounded-lg break-all">
-                          {drawer.lead.details?.email || "-"}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Phone */}
-                    <div className="col-span-2 space-y-2">
-                      <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">Phone</label>
-                      {drawer.isEditing ? (
-                        <input
-                          type="tel"
-                          value={editedLead?.details?.phoneNumber || ""}
-                          onChange={(e) => handleEditChange("phoneNumber", e.target.value)}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#854AE6] focus:ring-2 focus:ring-[#854AE6]/10 outline-none transition-all"
-                          placeholder="Enter phone number"
-                        />
-                      ) : (
-                        <p className="text-gray-900 font-medium py-3 px-4 bg-gray-50 rounded-lg">
-                          {drawer.lead.details?.phoneNumber || "-"}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Website */}
-                    <div className="col-span-2 space-y-2">
-                      <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">Website</label>
-                      {drawer.isEditing ? (
-                        <input
-                          type="url"
-                          value={editedLead?.details?.website || ""}
-                          onChange={(e) => handleEditChange("website", e.target.value)}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#854AE6] focus:ring-2 focus:ring-[#854AE6]/10 outline-none transition-all"
-                          placeholder="https://example.com"
-                        />
-                      ) : (
-                        <p className="text-gray-900 font-medium py-3 px-4 bg-gray-50 rounded-lg break-all">
-                          {drawer.lead.details?.website ? (
-                            <a href={drawer.lead.details.website} target="_blank" rel="noopener noreferrer" className="text-[#854AE6] hover:underline">
-                              {drawer.lead.details.website}
-                            </a>
-                          ) : "-"}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Notes */}
-                    <div className="col-span-2 space-y-2">
-                      <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">Notes</label>
-                      {drawer.isEditing ? (
-                        <textarea
-                          value={editedLead?.details?.notes || ""}
-                          onChange={(e) => handleEditChange("notes", e.target.value)}
-                          rows={3}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#854AE6] focus:ring-2 focus:ring-[#854AE6]/10 outline-none transition-all resize-none"
-                          placeholder="Add notes about this lead..."
-                        />
-                      ) : (
-                        <p className="text-gray-900 font-medium py-3 px-4 bg-gray-50 rounded-lg whitespace-pre-wrap">
-                          {drawer.lead.details?.notes || "-"}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Rating Section */}
-                <div className="space-y-3 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-5 border border-amber-200">
-                  <label className="block text-sm font-semibold text-gray-900 flex items-center gap-2">
-                    <svg className="w-5 h-5 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                    Rating
-                  </label>
-                  {drawer.isEditing ? (
-                    <div className="flex items-center gap-3">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                          key={star}
-                          onClick={() => handleRatingChange(star)}
-                          className={`text-3xl transition-all transform hover:scale-110 ${
-                            star <= (editedLead?.rating || 0) ? "text-amber-400 drop-shadow-md" : "text-gray-300 hover:text-amber-300"
-                          }`}
-                        >
-                          ★
-                        </button>
-                      ))}
-                      {(editedLead?.rating || 0) > 0 && (
-                        <span className="text-sm font-medium text-gray-600 ml-2">
-                          {editedLead?.rating}/5
-                        </span>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      {drawer.lead && drawer.lead.rating ? (
-                        <>
-                          <div className="flex gap-1">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <span
-                                key={star}
-                                className={`text-2xl ${
-                                  star <= drawer.lead!.rating! ? "text-amber-400" : "text-gray-300"
-                                }`}
-                              >
-                                ★
-                              </span>
-                            ))}
-                          </div>
-                          <span className="text-sm font-semibold text-gray-700 ml-2">
-                            {drawer.lead.rating.toFixed(1)}/5
-                          </span>
-                        </>
-                      ) : (
-                        <p className="text-gray-600 text-sm">No rating assigned yet</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* Scanned Card Image */}
-                {drawer.lead.scannedCardImage && (
-                  <div className="space-y-3">
-                    <label className="block text-sm font-semibold text-gray-900">Scanned Business Card</label>
-                    <div className="rounded-xl overflow-hidden border-2 border-gray-200 shadow-md">
-                      <img src={drawer.lead.scannedCardImage} alt="Scanned Card" className="w-full h-auto" />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Footer */}
-              <div className="sticky bottom-0 bg-white border-t-2 border-gray-100 px-8 py-4 flex items-center justify-end gap-3 shadow-md">
-                {drawer.isEditing ? (
-                  <>
-                    <button
-                      onClick={() => {
-                        setEditedLead(drawer.lead);
-                        setDrawer(prev => ({ ...prev, isEditing: false }));
-                      }}
-                      className="px-5 py-2.5 border-2 border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-all active:scale-95"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={saveLead}
-                      disabled={saving}
-                      className="px-5 py-2.5 bg-gradient-to-r from-[#854AE6] to-[#6F33C5] text-white rounded-lg font-medium hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 active:scale-95"
-                    >
-                      {saving ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          Save Changes
-                        </>
-                      )}
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={closeDrawer}
-                      className="px-5 py-2.5 border-2 border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-all active:scale-95"
-                    >
-                      Close
-                    </button>
-                    <button
-                      onClick={enableEdit}
-                      className="px-5 py-2.5 bg-gradient-to-r from-[#854AE6] to-[#6F33C5] text-white rounded-lg font-medium hover:shadow-lg transition-all flex items-center gap-2 active:scale-95"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                      Edit
-                    </button>
-                  </>
-                )}
-              </div>
+              <button
+                onClick={closeDrawer}
+                className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
-          </>
-        )}
-      </div>
-    );
-  };
 
-  export default TeamManagerLeads;
+            {/* Content */}
+            <div className="p-8 space-y-6">
+              {/* Source Info Card */}
+              <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-5 border border-slate-200">
+                <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-[#854AE6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Source Information
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Team Member</p>
+                    <p className="text-gray-900 font-medium mt-1">
+                      {drawer.lead && teamMembers.find(m => m._id === drawer.lead!.userId)?.firstName} {drawer.lead && teamMembers.find(m => m._id === drawer.lead!.userId)?.lastName}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Email</p>
+                    <p className="text-gray-900 font-medium mt-1 break-all">
+                      {drawer.lead && teamMembers.find(m => m._id === drawer.lead!.userId)?.email || "-"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Event</p>
+                    <p className="text-gray-900 font-medium mt-1">
+                      {drawer.lead && events.find(e => e._id === drawer.lead!.eventId)?.eventName}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Created</p>
+                    <p className="text-gray-900 font-medium mt-1">
+                      {drawer.lead && new Date(drawer.lead.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Lead Information Section */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-gray-900 text-lg flex items-center gap-2">
+                  <svg className="w-5 h-5 text-[#854AE6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Contact Information
+                </h3>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {/* First Name */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">First Name</label>
+                    {drawer.isEditing ? (
+                      <input
+                        type="text"
+                        value={editedLead?.details?.firstName || ""}
+                        onChange={(e) => handleEditChange("firstName", e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#854AE6] focus:ring-2 focus:ring-[#854AE6]/10 outline-none transition-all"
+                        placeholder="Enter first name"
+                      />
+                    ) : (
+                      <p className="text-gray-900 font-medium py-3 px-4 bg-gray-50 rounded-lg">
+                        {drawer.lead.details?.firstName || "-"}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Last Name */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">Last Name</label>
+                    {drawer.isEditing ? (
+                      <input
+                        type="text"
+                        value={editedLead?.details?.lastName || ""}
+                        onChange={(e) => handleEditChange("lastName", e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#854AE6] focus:ring-2 focus:ring-[#854AE6]/10 outline-none transition-all"
+                        placeholder="Enter last name"
+                      />
+                    ) : (
+                      <p className="text-gray-900 font-medium py-3 px-4 bg-gray-50 rounded-lg">
+                        {drawer.lead.details?.lastName || "-"}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Company */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">Company</label>
+                    {drawer.isEditing ? (
+                      <input
+                        type="text"
+                        value={editedLead?.details?.company || ""}
+                        onChange={(e) => handleEditChange("company", e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#854AE6] focus:ring-2 focus:ring-[#854AE6]/10 outline-none transition-all"
+                        placeholder="Enter company"
+                      />
+                    ) : (
+                      <p className="text-gray-900 font-medium py-3 px-4 bg-gray-50 rounded-lg">
+                        {drawer.lead.details?.company || "-"}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Position */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">Position</label>
+                    {drawer.isEditing ? (
+                      <input
+                        type="text"
+                        value={editedLead?.details?.position || ""}
+                        onChange={(e) => handleEditChange("position", e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#854AE6] focus:ring-2 focus:ring-[#854AE6]/10 outline-none transition-all"
+                        placeholder="Enter position"
+                      />
+                    ) : (
+                      <p className="text-gray-900 font-medium py-3 px-4 bg-gray-50 rounded-lg">
+                        {drawer.lead.details?.position || "-"}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Email - Full Width */}
+                  <div className="col-span-2 space-y-2">
+                    {drawer.isEditing ? (
+                      <MultiInput
+                        label="Email(s)"
+                        values={editedLead?.details?.emails || (editedLead?.details?.email ? [editedLead.details.email] : [])}
+                        onChange={(newValues) => {
+                          const firstEmail = newValues.length > 0 ? newValues[0] : '';
+                          setEditedLead(prev => {
+                            if (!prev) return null;
+                            return {
+                              ...prev,
+                              details: {
+                                ...prev.details,
+                                emails: newValues,
+                                email: firstEmail
+                              }
+                            };
+                          });
+                        }}
+                        type="email"
+                        placeholder="Type email & Enter"
+                      />
+                    ) : (
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">Email(s)</label>
+                        <div className="text-gray-900 font-medium py-3 px-4 bg-gray-50 rounded-lg break-all">
+                          {drawer.lead.details?.emails && drawer.lead.details.emails.length > 0 ? (
+                            drawer.lead.details.emails.map((email: string, idx: number) => (
+                              <div key={idx}>{email}</div>
+                            ))
+                          ) : (
+                            drawer.lead.details?.email || "-"
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Phone */}
+                  <div className="col-span-2 space-y-2">
+                    {drawer.isEditing ? (
+                      <MultiInput
+                        label="Phone Number(s)"
+                        values={editedLead?.details?.phoneNumbers || (editedLead?.details?.phoneNumber ? [editedLead.details.phoneNumber] : [])}
+                        onChange={(newValues) => {
+                          const firstPhone = newValues.length > 0 ? newValues[0] : '';
+                          setEditedLead(prev => {
+                            if (!prev) return null;
+                            return {
+                              ...prev,
+                              details: {
+                                ...prev.details,
+                                phoneNumbers: newValues,
+                                phoneNumber: firstPhone
+                              }
+                            };
+                          });
+                        }}
+                        type="tel"
+                        placeholder="Type number & Enter"
+                      />
+                    ) : (
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">Phone Number(s)</label>
+                        <div className="text-gray-900 font-medium py-3 px-4 bg-gray-50 rounded-lg">
+                          {drawer.lead.details?.phoneNumbers && drawer.lead.details.phoneNumbers.length > 0 ? (
+                            drawer.lead.details.phoneNumbers.map((phone: string, idx: number) => (
+                              <div key={idx}>{phone}</div>
+                            ))
+                          ) : (
+                            drawer.lead.details?.phoneNumber || "-"
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Website */}
+                  <div className="col-span-2 space-y-2">
+                    <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">Website</label>
+                    {drawer.isEditing ? (
+                      <input
+                        type="url"
+                        value={editedLead?.details?.website || ""}
+                        onChange={(e) => handleEditChange("website", e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#854AE6] focus:ring-2 focus:ring-[#854AE6]/10 outline-none transition-all"
+                        placeholder="https://example.com"
+                      />
+                    ) : (
+                      <p className="text-gray-900 font-medium py-3 px-4 bg-gray-50 rounded-lg break-all">
+                        {drawer.lead.details?.website ? (
+                          <a href={drawer.lead.details.website} target="_blank" rel="noopener noreferrer" className="text-[#854AE6] hover:underline">
+                            {drawer.lead.details.website}
+                          </a>
+                        ) : "-"}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Notes */}
+                  <div className="col-span-2 space-y-2">
+                    <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">Notes</label>
+                    {drawer.isEditing ? (
+                      <textarea
+                        value={editedLead?.details?.notes || ""}
+                        onChange={(e) => handleEditChange("notes", e.target.value)}
+                        rows={3}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#854AE6] focus:ring-2 focus:ring-[#854AE6]/10 outline-none transition-all resize-none"
+                        placeholder="Add notes about this lead..."
+                      />
+                    ) : (
+                      <p className="text-gray-900 font-medium py-3 px-4 bg-gray-50 rounded-lg whitespace-pre-wrap">
+                        {drawer.lead.details?.notes || "-"}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Rating Section */}
+              <div className="space-y-3 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-5 border border-amber-200">
+                <label className="block text-sm font-semibold text-gray-900 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  Rating
+                </label>
+                {drawer.isEditing ? (
+                  <div className="flex items-center gap-3">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onClick={() => handleRatingChange(star)}
+                        className={`text-3xl transition-all transform hover:scale-110 ${star <= (editedLead?.rating || 0) ? "text-amber-400 drop-shadow-md" : "text-gray-300 hover:text-amber-300"
+                          }`}
+                      >
+                        ★
+                      </button>
+                    ))}
+                    {(editedLead?.rating || 0) > 0 && (
+                      <span className="text-sm font-medium text-gray-600 ml-2">
+                        {editedLead?.rating}/5
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    {drawer.lead && drawer.lead.rating ? (
+                      <>
+                        <div className="flex gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <span
+                              key={star}
+                              className={`text-2xl ${star <= drawer.lead!.rating! ? "text-amber-400" : "text-gray-300"
+                                }`}
+                            >
+                              ★
+                            </span>
+                          ))}
+                        </div>
+                        <span className="text-sm font-semibold text-gray-700 ml-2">
+                          {drawer.lead.rating.toFixed(1)}/5
+                        </span>
+                      </>
+                    ) : (
+                      <p className="text-gray-600 text-sm">No rating assigned yet</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Scanned Card Image */}
+              {drawer.lead.scannedCardImage && (
+                <div className="space-y-3">
+                  <label className="block text-sm font-semibold text-gray-900">Scanned Business Card</label>
+                  <div className="rounded-xl overflow-hidden border-2 border-gray-200 shadow-md">
+                    <img src={drawer.lead.scannedCardImage} alt="Scanned Card" className="w-full h-auto" />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="sticky bottom-0 bg-white border-t-2 border-gray-100 px-8 py-4 flex items-center justify-end gap-3 shadow-md">
+              {drawer.isEditing ? (
+                <>
+                  <button
+                    onClick={() => {
+                      setEditedLead(drawer.lead);
+                      setDrawer(prev => ({ ...prev, isEditing: false }));
+                    }}
+                    className="px-5 py-2.5 border-2 border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-all active:scale-95"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={saveLead}
+                    disabled={saving}
+                    className="px-5 py-2.5 bg-gradient-to-r from-[#854AE6] to-[#6F33C5] text-white rounded-lg font-medium hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 active:scale-95"
+                  >
+                    {saving ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Save Changes
+                      </>
+                    )}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={closeDrawer}
+                    className="px-5 py-2.5 border-2 border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-all active:scale-95"
+                  >
+                    Close
+                  </button>
+                  <button
+                    onClick={enableEdit}
+                    className="px-5 py-2.5 bg-gradient-to-r from-[#854AE6] to-[#6F33C5] text-white rounded-lg font-medium hover:shadow-lg transition-all flex items-center gap-2 active:scale-95"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Edit
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+export default TeamManagerLeads;

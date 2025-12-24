@@ -6,7 +6,9 @@ export interface LeadDetails {
   company?: string;
   position?: string;
   email?: string;
+  emails?: string[]; // Array of emails
   phoneNumber?: string;
+  phoneNumbers?: string[]; // Array of phone numbers
   website?: string;
   address?: string;
   city?: string;
@@ -26,6 +28,8 @@ export interface Lead {
   };
   isIndependentLead: boolean;
   leadType: "full_scan" | "entry_code" | "manual";
+  images?: string[];
+  /** @deprecated use images array instead */
   scannedCardImage?: string;
   entryCode?: string;
   ocrText?: string;
@@ -41,6 +45,7 @@ export interface CreateLeadData {
   eventId?: string;
   isIndependentLead?: boolean;
   leadType?: "full_scan" | "entry_code" | "manual";
+  images?: string[];
   scannedCardImage?: string;
   entryCode?: string;
   ocrText?: string;
@@ -52,6 +57,7 @@ export interface UpdateLeadData {
   eventId?: string;
   isIndependentLead?: boolean;
   leadType?: "full_scan" | "entry_code" | "manual";
+  images?: string[];
   scannedCardImage?: string;
   entryCode?: string;
   ocrText?: string;
@@ -84,6 +90,7 @@ export interface ScanCardResponse {
   message: string;
   data: {
     scannedCardImage: string;
+    images?: string[];
     ocrText: string;
     details: LeadDetails;
     confidence: number;

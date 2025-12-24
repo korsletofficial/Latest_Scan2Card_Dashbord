@@ -3,6 +3,7 @@ import DashboardLayout from '../../components/DashboardLayout';
 import QRScanner from '../../components/QRScanner';
 import leadApi, { type Lead, type CreateLeadData, type UpdateLeadData } from '../../api/lead.api';
 import { Button } from '@/components/ui/button';
+import MultiInput from '@/components/ui/MultiInput';
 import rsvpApi, { type Rsvp } from '../../api/rsvp.api';
 import toast from 'react-hot-toast';
 
@@ -38,7 +39,9 @@ const EndUserLeads = () => {
       company: '',
       position: '',
       email: '',
+      emails: [],
       phoneNumber: '',
+      phoneNumbers: [],
       website: '',
       address: '',
       city: '',
@@ -217,10 +220,13 @@ const EndUserLeads = () => {
         setFormData({
           ...formData,
           scannedCardImage: response.data.scannedCardImage,
+          images: response.data.images || (response.data.scannedCardImage ? [response.data.scannedCardImage] : []),
           ocrText: response.data.ocrText || '',
           details: {
             ...formData.details,
             ...response.data.details,
+            emails: response.data.details.emails || (response.data.details.email ? [response.data.details.email] : []),
+            phoneNumbers: response.data.details.phoneNumbers || (response.data.details.phoneNumber ? [response.data.details.phoneNumber] : []),
           },
         });
         setConfidence(response.data.confidence);
@@ -247,6 +253,8 @@ const EndUserLeads = () => {
           details: {
             ...formData.details,
             ...response.data.details,
+            emails: response.data.details?.emails || (response.data.details?.email ? [response.data.details.email] : []),
+            phoneNumbers: response.data.details?.phoneNumbers || (response.data.details?.phoneNumber ? [response.data.details.phoneNumber] : []),
           },
         };
 
@@ -331,16 +339,20 @@ const EndUserLeads = () => {
 
   const resetForm = () => {
     setFormData({
+      leadType: 'manual',
       scannedCardImage: '',
-      ocrText: '',
+      images: [],
       entryCode: '',
+      ocrText: '',
       details: {
         firstName: '',
         lastName: '',
         company: '',
         position: '',
         email: '',
+        emails: [],
         phoneNumber: '',
+        phoneNumbers: [],
         website: '',
         address: '',
         city: '',
@@ -361,7 +373,8 @@ const EndUserLeads = () => {
   const openEditModal = (lead: Lead) => {
     setSelectedLead(lead);
     setFormData({
-      scannedCardImage: lead.scannedCardImage,
+      scannedCardImage: lead.scannedCardImage || '',
+      images: lead.images || (lead.scannedCardImage ? [lead.scannedCardImage] : []),
       ocrText: lead.ocrText || '',
       entryCode: lead.entryCode || '',
       details: lead.details,
@@ -473,8 +486,16 @@ const EndUserLeads = () => {
                       <td className="px-6 py-4 text-sm text-gray-900">{lead.details?.company || '-'}</td>
                       <td className="px-6 py-4">
                         <div className="text-sm">
-                          <p className="text-gray-900">{lead.details?.email || '-'}</p>
-                          <p className="text-gray-600">{lead.details?.phoneNumber || '-'}</p>
+                          {lead.details?.emails && lead.details.emails.length > 0 ? (
+                            lead.details.emails.map((e, i) => <p key={i} className="text-gray-900">{e}</p>)
+                          ) : (
+                            <p className="text-gray-900">{lead.details?.email || '-'}</p>
+                          )}
+                          {lead.details?.phoneNumbers && lead.details.phoneNumbers.length > 0 ? (
+                            lead.details.phoneNumbers.map((p, i) => <p key={i} className="text-gray-600">{p}</p>)
+                          ) : (
+                            <p className="text-gray-600">{lead.details?.phoneNumber || '-'}</p>
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4">{getRatingStars(lead.rating)}</td>
@@ -485,6 +506,15 @@ const EndUserLeads = () => {
                           </span>
                         ) : (
                           <span className="text-sm text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        {lead.images && lead.images.length > 0 ? (
+                          <img src={lead.images[0]} alt="Scanned Card" className="h-12 rounded shadow" />
+                        ) : lead.scannedCardImage ? (
+                          <img src={lead.scannedCardImage} alt="Scanned Card" className="h-12 rounded shadow" />
+                        ) : (
+                          "-"
                         )}
                       </td>
                       <td className="px-6 py-4">
@@ -606,8 +636,18 @@ const EndUserLeads = () => {
                       Upload a business card image to automatically extract contact information
                     </p>
 
-                    {/* Scan Card/QR Image Upload (only one allowed) */}
                     <div className="flex items-center gap-3">
+                      {/* Existing Images Display */}
+                      {formData.images && formData.images.length > 0 && (
+                        <div className="flex gap-2">
+                          {formData.images.map((img, idx) => (
+                            <div key={idx} className="relative group w-16 h-16">
+                              <img src={img} alt="Scanned" className="w-full h-full object-cover rounded border border-gray-300" />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
                       <label className="flex-1">
                         <input
                           type="file"
@@ -807,21 +847,41 @@ const EndUserLeads = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input
+                    <MultiInput
+                      label="Email(s)"
+                      values={formData.details?.emails || (formData.details?.email ? [formData.details.email] : [])}
+                      onChange={(newValues) => {
+                        const firstEmail = newValues.length > 0 ? newValues[0] : '';
+                        setFormData({
+                          ...formData,
+                          details: {
+                            ...formData.details!,
+                            emails: newValues,
+                            email: firstEmail
+                          }
+                        });
+                      }}
                       type="email"
-                      value={formData.details?.email || ''}
-                      onChange={(e) => setFormData({ ...formData, details: { ...formData.details!, email: e.target.value } })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#854AE6] focus:border-transparent"
+                      placeholder="Type email & Enter"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                    <input
+                    <MultiInput
+                      label="Phone Number(s)"
+                      values={formData.details?.phoneNumbers || (formData.details?.phoneNumber ? [formData.details.phoneNumber] : [])}
+                      onChange={(newValues) => {
+                        const firstPhone = newValues.length > 0 ? newValues[0] : '';
+                        setFormData({
+                          ...formData,
+                          details: {
+                            ...formData.details!,
+                            phoneNumbers: newValues,
+                            phoneNumber: firstPhone
+                          }
+                        });
+                      }}
                       type="tel"
-                      value={formData.details?.phoneNumber || ''}
-                      onChange={(e) => setFormData({ ...formData, details: { ...formData.details!, phoneNumber: e.target.value } })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#854AE6] focus:border-transparent"
+                      placeholder="Type number & Enter"
                     />
                   </div>
                 </div>
